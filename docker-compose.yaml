@@ -11,9 +11,8 @@ services:
       - prometheus_data:/prometheus
       - /home/docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     command:
-      # On précise le fichier de conf et la durée de rétention des données
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.retention.time=15d'
+      - '--config.file=/etc/prometheus/prometheus.yml' # Point de montage configuration de prometheus
+      - '--storage.tsdb.retention.time=15d' # Durée de retention des logs
     deploy:
       resources:
         limits:
@@ -34,19 +33,20 @@ services:
       - grafana-data:/var/lib/grafana
       - grafana-conf:/etc/grafana
     environment:
-    # SSO
+      # SSO
       GF_AUTH_GENERIC_OAUTH_ENABLED: "true"
       GF_AUTH_GENERIC_OAUTH_NAME: "LoutikSSO"
-      GF_AUTH_GENERIC_OAUTH_CLIENT_ID: "<Client ID from above>"
-      GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET: "<Client Secret from above>"
+      GF_AUTH_GENERIC_OAUTH_CLIENT_ID: "${SSO_ID}" # Valeur à configurer dans le .env
+      GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET: "${SSO_SECRET}" # Valeur à configurer dans le .env
       GF_AUTH_GENERIC_OAUTH_SCOPES: "openid profile email"
       GF_AUTH_GENERIC_OAUTH_AUTH_URL: "https://sso.loutik.fr/application/o/authorize/"
       GF_AUTH_GENERIC_OAUTH_TOKEN_URL: "https://sso.loutik.fr/application/o/token/"
       GF_AUTH_GENERIC_OAUTH_API_URL: "https://sso.loutik.fr/application/o/userinfo/"
       GF_AUTH_SIGNOUT_REDIRECT_URL: "https://sso.loutik.fr/application/o/grafana/end-session/"
-      GF_AUTH_OAUTH_AUTO_LOGIN: "true" # Désactiver la page de connexion grafana pour utiliser Authentik
       GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH: "contains(groups[*], 'Grafana Admins') && 'Admin' || contains(groups[*], 'Grafana Editors') && 'Editor' || 'Viewer'"
-      GF_SERVER_ROOT_URL: "https://sso.loutik.fr"
+      GF_SERVER_ROOT_URL: "https://supervision.loutik.fr"
+      # Gestion d'affichage de la version sur la page de connexion
+      GF_AUTH_ANONYMOUS_HIDE_VERSION: "true" # Affiche caché
     deploy:
       resources:
         limits:
@@ -56,7 +56,6 @@ services:
           cpus: '0.10'
           memory: 128M
 
-# Volume docker où sont stockés les données.
 volumes:
   prometheus_data:
   grafana-data:
